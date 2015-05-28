@@ -1,4 +1,5 @@
 
+[![Build Status](https://travis-ci.org/zalando-stups/pierone-client-java.svg?branch=master)](https://travis-ci.org/zalando-stups/pierone-client-java)
 [![Coverage Status](https://coveralls.io/repos/zalando-stups/pierone-client-java/badge.svg)](https://coveralls.io/r/zalando-stups/pierone-client-java)
 
 ##TODO
