@@ -1,3 +1,6 @@
+
+[![Coverage Status](https://coveralls.io/repos/zalando-stups/pierone-client-java/badge.svg)](https://coveralls.io/r/zalando-stups/pierone-client-java)
+
 ##TODO
 
 ## License
