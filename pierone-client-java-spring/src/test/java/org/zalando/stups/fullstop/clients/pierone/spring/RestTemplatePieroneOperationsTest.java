@@ -15,27 +15,20 @@
  */
 package org.zalando.stups.fullstop.clients.pierone.spring;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.client.resource.BaseOAuth2ProtectedResourceDetails;
+import org.springframework.test.web.client.MockRestServiceServer;
 
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.resource.BaseOAuth2ProtectedResourceDetails;
-
-import org.springframework.test.web.client.MockRestServiceServer;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 /**
  * @author  jbellmann
@@ -82,4 +75,20 @@ public class RestTemplatePieroneOperationsTest {
         mockServer.verify();
     }
     //J+
+
+    @Test
+    public void getScmSource() {
+        mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags/testVersion/scm-source"))
+                .andExpect(method(GET))
+                .andExpect(header("Authorization", "Bearer 86c45354-8bc4-44bf-905f-5f34ebe0b599"))
+                .andRespond(withSuccess(ResourceUtil.resource("/getScmSource"), APPLICATION_JSON));
+
+        Map<String, String> resultMap = client.getScmSource("testTeam", "testApplication", "testVersion");
+        assertThat(resultMap).isNotNull();
+        assertThat(resultMap).isNotEmpty();
+        assertThat(resultMap.size()).isEqualTo(4);
+        assertThat(resultMap.get("author")).isEqualTo("hjacobs");
+
+        mockServer.verify();
+    }
 }
