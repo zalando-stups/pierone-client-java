@@ -26,4 +26,6 @@ public interface PieroneOperations {
 
     Map<String, String> listTags(String team, String artifact);
 
+    Map<String, String> getScmSource(String team, String artifact, String version);
+
 }

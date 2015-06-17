@@ -15,12 +15,11 @@
  */
 package org.zalando.stups.fullstop.clients.pierone.spring;
 
+import org.springframework.web.client.RestOperations;
+import org.zalando.stups.fullstop.clients.pierone.PieroneOperations;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.springframework.web.client.RestOperations;
-
-import org.zalando.stups.fullstop.clients.pierone.PieroneOperations;
 
 /**
  * Implementation of {@link PieroneOperations} with spring.
@@ -40,7 +39,7 @@ public class RestTemplatePieroneOperations implements PieroneOperations {
 
     @Override
     public Map<String, String> listTags(final String team, final String artifact) {
-        Map<String, String> uriVariables = new HashMap<String, String>(0);
+        Map<String, String> uriVariables = new HashMap<>(0);
         uriVariables.put("team", team);
         uriVariables.put("artifact", artifact);
 
@@ -48,5 +47,17 @@ public class RestTemplatePieroneOperations implements PieroneOperations {
                     + "/v1/repositories/{team}/{artifact}/tags", Map.class, uriVariables);
 
         return result;
+    }
+
+    @Override
+    public Map<String, String> getScmSource(String team, String artifact, String version) {
+
+        Map<String, String> uriVariables = new HashMap<>(0);
+        uriVariables.put("team", team);
+        uriVariables.put("artifact", artifact);
+        uriVariables.put("version", version);
+
+        return this.restOperations.getForObject(baseUrl
+                + "/teams/{team}/artifacts/{artifact}/tags/{version}/scm-source", Map.class, uriVariables);
     }
 }
