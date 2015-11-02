@@ -19,12 +19,23 @@ import java.util.Map;
 
 /**
  * Defines Operations on PierOne.
- *
- * @author  jbellmann
  */
 public interface PieroneOperations {
 
-    Map<String, String> listTags(String team, String artifact);
+    /**
+     * Returns a mapping between tag names and tag summaries, e.g.
+     * <code><pre>
+     * {
+     *   "1.0": {"name": "1.0", "created": "2015-11-01T00:00:00.000Z", "createdBy": "someone"},
+     *   "2.0": {"name": "2.0", "created": "2015-11-02T00:00:00.000Z", "createdBy": "someoneelse"}
+     * }
+     * </pre></code>
+     *
+     * @param team     a team id, must not be empty
+     * @param artifact an artifact id, muts not be empty
+     * @return a Map, never null
+     */
+    Map<String, TagSummary> listTags(String team, String artifact);
 
     Map<String, String> getScmSource(String team, String artifact, String version);
 
