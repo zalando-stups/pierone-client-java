@@ -15,29 +15,30 @@
  */
 package org.zalando.stups.fullstop.clients.pierone.spring;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.resource.BaseOAuth2ProtectedResourceDetails;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestTemplate;
+import org.zalando.stups.fullstop.clients.pierone.TagSummary;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Map;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.zalando.stups.fullstop.clients.pierone.spring.ResourceUtil.resource;
 
-/**
- * @author  jbellmann
- */
 public class RestTemplatePieroneOperationsTest {
 
     private final String baseUrl = "http://localhost:8080";
-
-    private OAuth2RestTemplate restTemplate;
 
     private MockRestServiceServer mockServer;
 
@@ -45,32 +46,26 @@ public class RestTemplatePieroneOperationsTest {
 
     @Before
     public void setUp() {
+        final ObjectMapper om = new ObjectMapper();
+        om.findAndRegisterModules();
 
-        BaseOAuth2ProtectedResourceDetails resource = new BaseOAuth2ProtectedResourceDetails();
-        resource.setClientId("what_here");
-
-        restTemplate = new OAuth2RestTemplate(resource);
-        restTemplate.setAccessTokenProvider(new TestAccessTokenProvider("86c45354-8bc4-44bf-905f-5f34ebe0b599"));
-        restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+        final RestTemplate restTemplate = new RestTemplate(singletonList(new MappingJackson2HttpMessageConverter(om)));
 
         client = new RestTemplatePieroneOperations(restTemplate, baseUrl);
-
         mockServer = MockRestServiceServer.createServer(restTemplate);
     }
 
     //J-
     @Test
-    public void getRefoles() {
-        mockServer.expect(requestTo(baseUrl + "/v1/repositories/testTeam/testApplication/tags"))
-                    .andExpect(method(GET))
-                    .andExpect(header("Authorization", "Bearer 86c45354-8bc4-44bf-905f-5f34ebe0b599"))
-                    .andRespond(withSuccess(ResourceUtil.resource("/getTags"), APPLICATION_JSON));
+    public void getTags() {
+        mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags"))
+                .andExpect(method(GET))
+                .andRespond(withSuccess(resource("/getTags"), APPLICATION_JSON));
 
-        Map<String,String> resultMap = client.listTags("testTeam", "testApplication");
-        assertThat(resultMap).isNotNull();
-        assertThat(resultMap).isNotEmpty();
-        assertThat(resultMap.size()).isEqualTo(6);
-        assertThat(resultMap.get("0.7")).isEqualTo("febd155ed19b741f2c87f162ed6183c84039b7c8e43eb0136d475f816a821894");
+        final Map<String, TagSummary> resultMap = client.listTags("testTeam", "testApplication");
+        assertThat(resultMap).hasSize(4);
+        assertThat(resultMap.get("4.0")).isEqualToComparingFieldByField(
+                new TagSummary("4.0", ZonedDateTime.of(2015, 11, 1, 0, 0, 0, 0, ZoneId.of("GMT")), "some_one"));
 
         mockServer.verify();
     }
@@ -80,8 +75,7 @@ public class RestTemplatePieroneOperationsTest {
     public void getScmSource() {
         mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags/testVersion/scm-source"))
                 .andExpect(method(GET))
-                .andExpect(header("Authorization", "Bearer 86c45354-8bc4-44bf-905f-5f34ebe0b599"))
-                .andRespond(withSuccess(ResourceUtil.resource("/getScmSource"), APPLICATION_JSON));
+                .andRespond(withSuccess(resource("/getScmSource"), APPLICATION_JSON));
 
         Map<String, String> resultMap = client.getScmSource("testTeam", "testApplication", "testVersion");
         assertThat(resultMap).isNotNull();

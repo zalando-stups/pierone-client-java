@@ -18,7 +18,7 @@ package org.zalando.stups.fullstop.clients.pierone.spring;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-class ResourceUtil {
+final class ResourceUtil {
 
     static Resource resource(final String resourcename) {
         return new ClassPathResource(resourcename + ".json", ResourceUtil.class);

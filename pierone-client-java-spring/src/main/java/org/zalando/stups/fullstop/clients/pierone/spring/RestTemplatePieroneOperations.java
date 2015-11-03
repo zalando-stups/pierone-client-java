@@ -15,18 +15,29 @@
  */
 package org.zalando.stups.fullstop.clients.pierone.spring;
 
+
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestOperations;
 import org.zalando.stups.fullstop.clients.pierone.PieroneOperations;
+import org.zalando.stups.fullstop.clients.pierone.TagSummary;
 
-import java.util.HashMap;
+import java.net.URI;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+
+import static org.springframework.http.RequestEntity.get;
+import static org.springframework.web.util.UriComponentsBuilder.fromHttpUrl;
 
 /**
  * Implementation of {@link PieroneOperations} with spring.
- *
- * @author  jbellmann
  */
 public class RestTemplatePieroneOperations implements PieroneOperations {
+
+    private static final ParameterizedTypeReference<List<TagSummary>> LIST_OF_TAG_SUMMARIES = new ParameterizedTypeReference<List<TagSummary>>() {
+    };
+    private static final ParameterizedTypeReference<Map<String, String>> MAP_STRING_TO_STRING = new ParameterizedTypeReference<Map<String, String>>() {
+    };
 
     private final RestOperations restOperations;
 
@@ -38,26 +49,17 @@ public class RestTemplatePieroneOperations implements PieroneOperations {
     }
 
     @Override
-    public Map<String, String> listTags(final String team, final String artifact) {
-        Map<String, String> uriVariables = new HashMap<>(0);
-        uriVariables.put("team", team);
-        uriVariables.put("artifact", artifact);
-
-        Map<String, String> result = this.restOperations.getForObject(baseUrl
-                    + "/v1/repositories/{team}/{artifact}/tags", Map.class, uriVariables);
-
+    public Map<String, TagSummary> listTags(final String team, final String artifact) {
+        final URI uri = fromHttpUrl(baseUrl + "/teams/{team}/artifacts/{artifact}/tags").buildAndExpand(team, artifact).toUri();
+        final List<TagSummary> tags = restOperations.exchange(get(uri).build(), LIST_OF_TAG_SUMMARIES).getBody();
+        final Map<String, TagSummary> result = new LinkedHashMap<>(tags.size());
+        tags.forEach((tag) -> result.put(tag.getName(), tag));
         return result;
     }
 
     @Override
     public Map<String, String> getScmSource(String team, String artifact, String version) {
-
-        Map<String, String> uriVariables = new HashMap<>(0);
-        uriVariables.put("team", team);
-        uriVariables.put("artifact", artifact);
-        uriVariables.put("version", version);
-
-        return this.restOperations.getForObject(baseUrl
-                + "/teams/{team}/artifacts/{artifact}/tags/{version}/scm-source", Map.class, uriVariables);
+        final URI uri = fromHttpUrl(baseUrl + "/teams/{team}/artifacts/{artifact}/tags/{version}/scm-source").buildAndExpand(team, artifact, version).toUri();
+        return this.restOperations.exchange(get(uri).build(), MAP_STRING_TO_STRING).getBody();
     }
 }

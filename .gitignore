@@ -5,3 +5,6 @@
 target
 
 pom.xml.*Backup
+
+*.iml
+.idea
