@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.response.MockRestResponseCreators;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.ZoneId;
@@ -30,9 +30,12 @@ import java.util.Map;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
+import static org.zalando.stups.pierone.client.ResourceUtil.resource;
 
 public class RestTemplatePieroneOperationsTest {
 
@@ -53,12 +56,11 @@ public class RestTemplatePieroneOperationsTest {
         mockServer = MockRestServiceServer.createServer(restTemplate);
     }
 
-    //J-
     @Test
-    public void getTags() {
+    public void testGetTags() {
         mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags"))
                 .andExpect(method(GET))
-                .andRespond(MockRestResponseCreators.withSuccess(ResourceUtil.resource("/getTags"), APPLICATION_JSON));
+                .andRespond(withSuccess(resource("/getTags"), APPLICATION_JSON));
 
         final Map<String, TagSummary> resultMap = client.listTags("testTeam", "testApplication");
         assertThat(resultMap).hasSize(4);
@@ -67,13 +69,32 @@ public class RestTemplatePieroneOperationsTest {
 
         mockServer.verify();
     }
-    //J+
+
+    @Test
+    public void testGetTagsNotFound() throws Exception {
+        mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags"))
+                .andExpect(method(GET))
+                .andRespond(withStatus(NOT_FOUND));
+
+        assertThat(client.listTags("testTeam", "testApplication")).isEmpty();
+
+        mockServer.verify();
+    }
+
+    @Test(expected = HttpServerErrorException.class)
+    public void testGetTagsFailed() throws Exception {
+        mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags"))
+                .andExpect(method(GET))
+                .andRespond(withServerError());
+
+        client.listTags("testTeam", "testApplication");
+    }
 
     @Test
     public void getScmSource() {
         mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags/testVersion/scm-source"))
                 .andExpect(method(GET))
-                .andRespond(MockRestResponseCreators.withSuccess(ResourceUtil.resource("/getScmSource"), APPLICATION_JSON));
+                .andRespond(withSuccess(resource("/getScmSource"), APPLICATION_JSON));
 
         Map<String, String> resultMap = client.getScmSource("testTeam", "testApplication", "testVersion");
         assertThat(resultMap).isNotNull();
@@ -82,5 +103,25 @@ public class RestTemplatePieroneOperationsTest {
         assertThat(resultMap.get("author")).isEqualTo("hjacobs");
 
         mockServer.verify();
+    }
+
+    @Test
+    public void getScmSourceNotFound() {
+        mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags/testVersion/scm-source"))
+                .andExpect(method(GET))
+                .andRespond(withStatus(NOT_FOUND));
+
+        assertThat(client.getScmSource("testTeam", "testApplication", "testVersion")).isNull();
+
+        mockServer.verify();
+    }
+
+    @Test(expected = HttpServerErrorException.class)
+    public void testGetScmSourceFailed() throws Exception {
+        mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags/testVersion/scm-source"))
+                .andExpect(method(GET))
+                .andRespond(withServerError());
+
+        client.getScmSource("testTeam", "testApplication", "testVersion");
     }
 }
