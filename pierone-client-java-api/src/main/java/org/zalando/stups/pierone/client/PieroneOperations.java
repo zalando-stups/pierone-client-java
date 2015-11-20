@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.zalando.stups.fullstop.clients.pierone;
+package org.zalando.stups.pierone.client;
 
 import java.util.Map;
 
@@ -37,6 +37,12 @@ public interface PieroneOperations {
      */
     Map<String, TagSummary> listTags(String team, String artifact);
 
+
+    /**
+     * Returns the content of the image's scm-source.json
+     *
+     * @return a Map, or null, if no scm source is available for the requested image.
+     */
     Map<String, String> getScmSource(String team, String artifact, String version);
 
 }

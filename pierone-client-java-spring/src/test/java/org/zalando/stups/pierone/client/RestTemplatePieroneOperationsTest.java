@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.zalando.stups.fullstop.clients.pierone.spring;
+package org.zalando.stups.pierone.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
-import org.zalando.stups.fullstop.clients.pierone.TagSummary;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -33,8 +33,6 @@ import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-import static org.zalando.stups.fullstop.clients.pierone.spring.ResourceUtil.resource;
 
 public class RestTemplatePieroneOperationsTest {
 
@@ -60,7 +58,7 @@ public class RestTemplatePieroneOperationsTest {
     public void getTags() {
         mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags"))
                 .andExpect(method(GET))
-                .andRespond(withSuccess(resource("/getTags"), APPLICATION_JSON));
+                .andRespond(MockRestResponseCreators.withSuccess(ResourceUtil.resource("/getTags"), APPLICATION_JSON));
 
         final Map<String, TagSummary> resultMap = client.listTags("testTeam", "testApplication");
         assertThat(resultMap).hasSize(4);
@@ -75,7 +73,7 @@ public class RestTemplatePieroneOperationsTest {
     public void getScmSource() {
         mockServer.expect(requestTo(baseUrl + "/teams/testTeam/artifacts/testApplication/tags/testVersion/scm-source"))
                 .andExpect(method(GET))
-                .andRespond(withSuccess(resource("/getScmSource"), APPLICATION_JSON));
+                .andRespond(MockRestResponseCreators.withSuccess(ResourceUtil.resource("/getScmSource"), APPLICATION_JSON));
 
         Map<String, String> resultMap = client.getScmSource("testTeam", "testApplication", "testVersion");
         assertThat(resultMap).isNotNull();
